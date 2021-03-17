@@ -1,5 +1,8 @@
 package com.learn.codingChallenge.transactions
 
+import android.os.Build
+import androidx.annotation.RequiresApi
+import androidx.annotation.VisibleForTesting
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -13,6 +16,7 @@ import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+@RequiresApi(Build.VERSION_CODES.N)
 @HiltViewModel
 class TransactionsViewModel @Inject constructor(private val repo: CodingRepo) : ViewModel() {
 
@@ -30,7 +34,8 @@ class TransactionsViewModel @Inject constructor(private val repo: CodingRepo) : 
     }
 
 
-    private fun getTransactions() {
+    @VisibleForTesting
+    fun getTransactions() {
         viewModelScope.launch {
             _transactionStates.value = TransactionStates.Loading
             repo.getTransactions().collect {
@@ -39,7 +44,7 @@ class TransactionsViewModel @Inject constructor(private val repo: CodingRepo) : 
                         if (it.data.transactions.isNullOrEmpty()) _transactionStates.value =
                             TransactionStates.Message(noTransactions)
                         else _transactionStates.value =
-                            TransactionStates.DisplayList(it.data.transactions)
+                            TransactionStates.DisplayList(getUpdatedTransactions(it.data.transactions))
 
                     }
                     is DataState.Failure -> _transactionStates.value =
@@ -49,4 +54,29 @@ class TransactionsViewModel @Inject constructor(private val repo: CodingRepo) : 
         }
 
     }
+
+
+    @VisibleForTesting
+    fun getUpdatedTransactions(transactions: ArrayList<Transaction>): ArrayList<Transaction> {
+        val map = createMapWithOccurrence(transactions)
+        transactions.forEach {
+            it.isRecurring = map.getOrDefault(getRecurringKey(it), 0) > 1
+        }
+        return transactions
+    }
+
+    @VisibleForTesting
+    fun createMapWithOccurrence(transactions: ArrayList<Transaction>): Map<String, Int> {
+        // Put objects into HashMap with count
+        val map = mutableMapOf<String, Int>()
+        transactions.forEach {
+            map[getRecurringKey(it)] = map.getOrDefault(getRecurringKey(it), 0) + 1
+        }
+
+        return map
+    }
+
+    @VisibleForTesting
+    fun getRecurringKey(transaction: Transaction): String =
+        transaction.merchantName + transaction.amountCents
 }

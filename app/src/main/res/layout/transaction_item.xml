@@ -30,7 +30,7 @@
         app:layout_constraintBaseline_toBaselineOf="@id/date"
         app:layout_constraintStart_toEndOf="@id/date"
         android:layout_marginStart="10dp"
-        tools:text="Recurring"/>
+        android:text="Recurring"/>
 
     <TextView
         android:id="@+id/price"
