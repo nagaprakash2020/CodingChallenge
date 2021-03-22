@@ -46,6 +46,53 @@ class TransactionsViewModelTest {
 
     lateinit var viewModel: TransactionsViewModel
 
+
+    @Test
+    fun `verify noSearchResults is set`(){
+
+
+
+        val mockTransaction1 = Transaction(
+            uuid = "",
+            merchantUuid = "",
+            merchantName = "Spotify",
+            currencyCode = "",
+            amountCents = 1L,
+            timestamp = 2L,
+            isRecurring = false
+        )
+
+        val mockTransaction2 = Transaction(
+            uuid = "",
+            merchantUuid = "",
+            merchantName = "Netflix",
+            currencyCode = "",
+            amountCents = 1L,
+            timestamp = 2L,
+            isRecurring = false
+        )
+        val mockTransaction3 = Transaction(
+            uuid = "",
+            merchantUuid = "",
+            merchantName = "Spotify",
+            currencyCode = "",
+            amountCents = 1L,
+            timestamp = 2L,
+            isRecurring = false
+        )
+        val mockList = arrayListOf(mockTransaction1,mockTransaction2,mockTransaction3)
+
+        `when`(mockRepo.getTransactions()).thenReturn(flow {
+            emit(DataState.Success(Transactions(mockList)))
+        })
+
+        viewModel = TransactionsViewModel(mockRepo)
+        val search = "spadf"
+        viewModel.filterTransactions(search)
+
+        assertEquals(viewModel.noSearchResults.value, true)
+    }
+
     @Test
     fun `transactionStates is set to MessageState with genericError message when repo returns a failure`() {
         `when`(mockRepo.getTransactions()).thenReturn(flow {

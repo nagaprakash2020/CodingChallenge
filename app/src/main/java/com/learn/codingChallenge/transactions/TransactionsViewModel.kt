@@ -3,10 +3,7 @@ package com.learn.codingChallenge.transactions
 import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.annotation.VisibleForTesting
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.*
 import com.learn.codingChallenge.models.Transaction
 import com.learn.codingChallenge.repository.CodingRepo
 import com.learn.codingChallenge.utils.DataState
@@ -26,6 +23,15 @@ class TransactionsViewModel @Inject constructor(private val repo: CodingRepo) : 
         data class DisplayList(val transactions: ArrayList<Transaction>) : TransactionStates()
     }
 
+    @VisibleForTesting
+    var filteredTransactions:MutableLiveData<List<Transaction>> = MutableLiveData()
+    private var _searchedTransactions:MutableLiveData<List<Transaction>> = MutableLiveData()
+    var searchedTransactions:LiveData<List<Transaction>> = _searchedTransactions
+
+    private var _noSearchResults:MutableLiveData<Boolean> = MutableLiveData()
+    var noSearchResults:LiveData<Boolean> = _noSearchResults
+
+
     private var _transactionStates = MutableLiveData<TransactionStates>()
     val transactionStates: LiveData<TransactionStates> = _transactionStates
 
@@ -33,6 +39,19 @@ class TransactionsViewModel @Inject constructor(private val repo: CodingRepo) : 
         getTransactions()
     }
 
+
+    fun filterTransactions(searchQuery:String) {
+        val filteredList =
+            filteredTransactions.value?.filter { it.merchantName.startsWith(searchQuery, true) }
+
+        if(filteredList.isNullOrEmpty()){
+            _noSearchResults.value = true
+            _searchedTransactions.value = emptyList()
+        }else{
+            _noSearchResults.value = false
+            _searchedTransactions.value = filteredList
+        }
+    }
 
     @VisibleForTesting
     fun getTransactions() {
@@ -43,8 +62,11 @@ class TransactionsViewModel @Inject constructor(private val repo: CodingRepo) : 
                     is DataState.Success -> {
                         if (it.data.transactions.isNullOrEmpty()) _transactionStates.value =
                             TransactionStates.Message(noTransactions)
-                        else _transactionStates.value =
-                            TransactionStates.DisplayList(getUpdatedTransactions(it.data.transactions))
+                        else{
+                            filteredTransactions.value = it.data.transactions
+                            _transactionStates.value =
+                                TransactionStates.DisplayList(getUpdatedTransactions(it.data.transactions))
+                        }
 
                     }
                     is DataState.Failure -> _transactionStates.value =

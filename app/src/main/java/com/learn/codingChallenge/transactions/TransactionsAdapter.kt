@@ -12,7 +12,7 @@ import com.learn.codingChallenge.utils.getDollarAmount
 
 class TransactionsAdapter: RecyclerView.Adapter<TransactionsAdapter.TransactionItemVH>() {
 
-    var transactionList: ArrayList<Transaction>? = null
+    var transactionList: List<Transaction>? = null
         set(value) {
             field = value
             notifyDataSetChanged()

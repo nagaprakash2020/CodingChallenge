@@ -1,9 +1,12 @@
 package com.learn.codingChallenge.transactions
 
+import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.view.View
 import androidx.activity.viewModels
+import androidx.annotation.RequiresApi
+import androidx.core.widget.doOnTextChanged
 import androidx.lifecycle.Observer
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -19,12 +22,16 @@ class TransactionsActivity : AppCompatActivity() {
     private val viewModel: TransactionsViewModel by viewModels()
     private lateinit var adapter:TransactionsAdapter
 
+    @RequiresApi(Build.VERSION_CODES.N)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
         createTransactionsListView()
+        binding.search.doOnTextChanged { text, _, _, _ ->
+            viewModel.filterTransactions(text.toString())
+        }
         lifecycleScope.launchWhenStarted {
             observeData()
         }
@@ -43,6 +50,17 @@ class TransactionsActivity : AppCompatActivity() {
                 is Loading -> showLoadingState()
                 is DisplayList -> showListState(it.transactions)
                 is Message -> showMessageState(it.message)
+            }
+        })
+        viewModel.searchedTransactions.observe(this, Observer {
+            adapter.transactionList = it
+        })
+        viewModel.noSearchResults.observe(this, Observer {
+            if(it){
+                binding.messageTV.visibility = View.VISIBLE
+                binding.messageTV.text = "No transactions found"
+            }else {
+                binding.messageTV.visibility = View.INVISIBLE
             }
         })
     }
