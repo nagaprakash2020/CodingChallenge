@@ -6,10 +6,18 @@
     android:layout_height="match_parent"
     tools:context=".transactions.TransactionsActivity">
 
+
+    <EditText
+        android:id="@+id/search"
+        app:layout_constraintTop_toTopOf="parent"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
+
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/transactionsRV"
-        android:layout_height="match_parent"
-        android:layout_width="match_parent"/>
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:layout_constraintTop_toBottomOf="@+id/search" />
 
     <ProgressBar
         android:id="@+id/loadingPI"
